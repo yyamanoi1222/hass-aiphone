@@ -66,11 +66,14 @@ class AiphoneConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     # ------------------------------------------------------------------
+    async def _run_pairing(self) -> dict:
+        """Coroutine wrapper: async_create_task requires a coroutine, not a Future."""
+        return await self.hass.async_add_executor_job(pair_aiphone, self._termname)
+
+    # ------------------------------------------------------------------
     async def async_step_pair(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         if self._task is None:
-            self._task = self.hass.async_create_task(
-                self.hass.async_add_executor_job(pair_aiphone, self._termname)
-            )
+            self._task = self.hass.async_create_task(self._run_pairing())
 
         if not self._task.done():
             return self.async_show_progress(
